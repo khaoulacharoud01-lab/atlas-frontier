@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atlas Frontier - NASA Space Apps 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .loader {
+            border: 4px solid #e2e8f0; border-top: 4px solid #059669;
+            border-radius: 50%; width: 40px; height: 40px;
+            animation: spin 1s linear infinite; margin: 0 auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="min-h-screen text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-emerald-800 text-white shadow-lg">
+        <div class="max-w-5xl mx-auto px-6 py-6 flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold flex items-center gap-2">🌾 Atlas Frontier</h1>
+                <p class="text-emerald-200 text-sm">AI-Powered Crop Rotation Advisor</p>
+            </div>
+            <span class="bg-emerald-900 px-3 py-1 rounded-full text-xs border border-emerald-600 hidden md:block">NASA Space Apps 2026</span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-6 py-10 space-y-8">
+        
+        <!-- API Key Input -->
+        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-6 shadow-sm">
+            <h2 class="text-lg font-semibold text-yellow-800 mb-2">🔑 One-time Setup: Enter your Groq API Key</h2>
+            <p class="text-xs text-yellow-600 mb-4">Your key is processed securely and only used for this session.</p>
+            <input type="password" id="apiKey" placeholder="gsk_..." class="w-full px-4 py-3 rounded-lg border border-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+        </div>
+
+        <!-- Form -->
+        <div class="bg-white rounded-xl shadow-md p-8 border border-gray-100">
+            <h2 class="text-xl font-bold text-gray-800 mb-6 border-b pb-4">📍 Tell Us About Your Farm</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                    <select id="country" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="31.79,-7.09">Morocco 🇲🇦</option>
+                        <option value="33.89,9.54">Tunisia 🇹🇳</option>
+                        <option value="28.03,1.66">Algeria 🇩🇿</option>
+                        <option value="26.82,30.80">Egypt 🇪🇬</option>
+                        <option value="37.09,-95.71">United States 🇺🇸</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Current Main Crop</label>
+                    <select id="crop" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="Wheat (Blé)">Wheat (Blé)</option>
+                        <option value="Barley (Orge)">Barley (Orge)</option>
+                        <option value="Corn (Maïs)">Corn (Maïs)</option>
+                        <option value="Tomatoes">Tomatoes</option>
+                        <option value="Olive">Olive (Olivier)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Main Challenges</label>
+                <div class="flex flex-wrap gap-4">
+                    <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" value="Drought and water shortage" checked class="text-emerald-600 rounded w-4 h-4"> <span class="text-sm">Drought</span></label>
+                    <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" value="Extreme heat" class="text-emerald-600 rounded w-4 h-4"> <span class="text-sm">Extreme Heat</span></label>
+                    <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" value="Soil degradation" class="text-emerald-600 rounded w-4 h-4"> <span class="text-sm">Soil Degradation</span></label>
+                    <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox" value="Low income" class="text-emerald-600 rounded w-4 h-4"> <span class="text-sm">Low Income</span></label>
+                </div>
+            </div>
+
+            <button onclick="runAnalysis()" id="analyzeBtn" class="mt-8 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-lg transition duration-200 shadow-lg flex justify-center items-center gap-3">
+                <span>🛰️ Fetch NASA Data & Generate Strategies</span>
+            </button>
+        </div>
+
+        <!-- Results Section (Hidden initially) -->
+        <div id="results" class="hidden space-y-6">
+            
+            <!-- Loading -->
+            <div id="loading" class="hidden text-center py-10 bg-white rounded-xl shadow-md">
+                <div class="loader"></div>
+                <p class="mt-4 text-emerald-700 font-medium" id="loadingText">Connecting to NASA...</p>
+            </div>
+
+            <!-- Error -->
+            <div id="error" class="hidden bg-red-50 border border-red-200 text-red-700 p-6 rounded-xl shadow-sm">
+                <h3 class="font-bold mb-2">⚠️ Error Occurred</h3>
+                <p id="errorMsg" class="text-sm"></p>
+            </div>
+
+            <!-- NASA Data -->
+            <div id="nasaData" class="hidden bg-blue-900 text-white rounded-xl shadow-md p-6">
+                <h3 class="text-sm font-semibold text-blue-300 mb-4 uppercase tracking-wider flex items-center gap-2"><span class="text-lg">🛰️</span> NASA POWER Climate Data</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                    <div class="bg-blue-800 p-4 rounded-lg border border-blue-700">
+                        <div class="text-3xl font-bold" id="tempData">--</div>
+                        <div class="text-xs text-blue-300 mt-1 uppercase">Avg Temp (°C)</div>
+                    </div>
+                    <div class="bg-blue-800 p-4 rounded-lg border border-blue-700">
+                        <div class="text-3xl font-bold" id="rainData">--</div>
+                        <div class="text-xs text-blue-300 mt-1 uppercase">Annual Rain (mm)</div>
+                    </div>
+                    <div class="bg-blue-800 p-4 rounded-lg border border-blue-700">
+                        <div class="text-3xl font-bold" id="dryData">--</div>
+                        <div class="text-xs text-blue-300 mt-1 uppercase">Dry Months</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Strategies -->
+            <div id="strategies" class="hidden space-y-4">
+                <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">🌱 Recommended Rotation Strategies</h2>
+                <div id="strategiesContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-gray-400 text-center py-6 text-sm mt-12">
+        <p>Atlas Frontier - Team Atlas Frontier 🇲🇦</p>
+        <p class="text-xs mt-1">This tool supports — but does not replace — local agricultural expertise.</p>
+    </footer>
+
+    <script>
+        async function runAnalysis() {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            if (!apiKey.startsWith('gsk_')) {
+                alert('Please enter a valid Groq API Key starting with gsk_');
+                return;
+            }
+
+            const coords = document.getElementById('country').value.split(',');
+            const lat = coords[0];
+            const lon = coords[1];
+            const crop = document.getElementById('crop').value;
+            
+            const challenges = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+                                   .map(cb => cb.value)
+                                   .join(', ');
+
+            // UI Updates
+            document.getElementById('results').classList.remove('hidden');
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('error').classList.add('hidden');
+            document.getElementById('nasaData').classList.add('hidden');
+            document.getElementById('strategies').classList.add('hidden');
+            document.getElementById('analyzeBtn').disabled = true;
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+
+            try {
+                // 1. Fetch NASA Data
+                document.getElementById('loadingText').innerText = "🛰️ Fetching NASA satellite data...";
+                const nasaUrl = `https://power.larc.nasa.gov/api/temporal/climatology/point?parameters=PRECTOTCORR,T2M&community=AG&longitude=${lon}&latitude=${lat}&format=JSON`;
+                
+                const nasaRes = await fetch(nasaUrl);
+                if (!nasaRes.ok) throw new Error("NASA API failed.");
+                const nasaJson = await nasaRes.json();
+                
+                const params = nasaJson.properties.parameter;
+                const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+                
+                let totalRain = 0, totalTemp = 0, dryMonths = 0;
+                months.forEach(m => {
+                    const r = params.PRECTOTCORR[m] || 0;
+                    const t = params.T2M[m] || 0;
+                    totalRain += r * 30.5;
+                    totalTemp += t;
+                    if (r < 1) dryMonths++;
+                });
+
+                const avgTemp = (totalTemp / 12).toFixed(1);
+                const annualRain = Math.round(totalRain);
+
+                // Update NASA UI
+                document.getElementById('tempData').innerText = avgTemp;
+                document.getElementById('rainData').innerText = annualRain;
+                document.getElementById('dryData').innerText = dryMonths;
+                document.getElementById('nasaData').classList.remove('hidden');
+
+                // 2. Fetch Groq AI (Via our Vercel Serverless Function to bypass CORS)
+                document.getElementById('loadingText').innerText = "🤖 AI is analyzing crop rotations...";
+                
+                const prompt = `Farm in ${lat},${lon}. Current Crop: ${crop}. Challenges: ${challenges}. NASA Data: Temp ${avgTemp}C, Rain ${annualRain}mm, Dry months: ${dryMonths}. 
+Provide 3 crop rotation strategies in strict JSON format:
+{
+  "strategies": [
+    {"name": "Strategy Name", "type": "Current", "sequence": ["Crop 1", "Crop 2"], "why": "Reasoning", "benefits": "Benefits", "risk": "Risks", "score": 50},
+    {"name": "Strategy Name", "type": "Improved", "sequence": ["Crop A", "Crop B"], "why": "Reasoning", "benefits": "Benefits", "risk": "Risks", "score": 75},
+    {"name": "Strategy Name", "type": "Alternative", "sequence": ["Crop X", "Crop Y"], "why": "Reasoning", "benefits": "Benefits", "risk": "Risks", "score": 90}
+  ]
+}`;
+
+                // ⚠️ Calling our new Serverless Function
+                const groqRes = await fetch('/api/groq', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, apiKey })
+                });
+
+                if (!groqRes.ok) {
+                    const errData = await groqRes.json().catch(() => ({}));
+                    throw new Error(`Server Error: ${errData.error || groqRes.statusText}`);
+                }
+
+                const groqData = await groqRes.json();
+                let content = groqData.content;
+                
+                // Clean JSON formatting from AI
+                content = content.replace(/```json/g, '').replace(/```/g, '').trim();
+                const parsed = JSON.parse(content.substring(content.indexOf('{'), content.lastIndexOf('}') + 1));
+
+                // Render Strategies
+                const container = document.getElementById('strategiesContainer');
+                container.innerHTML = '';
+                
+                parsed.strategies.forEach((s, i) => {
+                    const bgClass = i === 0 ? 'border-gray-400' : i === 1 ? 'border-emerald-500' : 'border-blue-500';
+                    const badgeClass = i === 0 ? 'bg-gray-100 text-gray-700' : i === 1 ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700';
+                    
+                    container.innerHTML += `
+                        <div class="bg-white rounded-xl shadow-md p-6 border-t-4 ${bgClass} flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <span class="text-xs font-bold px-2 py-1 rounded ${badgeClass}">${s.type}</span>
+                                    <span class="text-sm font-bold text-gray-500">${s.score}/100</span>
+                                </div>
+                                <h3 class="text-lg font-bold text-gray-800 mb-2">${s.name}</h3>
+                                <div class="text-sm text-emerald-600 font-bold mb-4">${s.sequence.join(' → ')}</div>
+                                <div class="text-sm text-gray-600 space-y-2 mb-4">
+                                    <p><strong class="text-gray-800">Why:</strong> ${s.why}</p>
+                                    <p><strong class="text-gray-800">Benefits:</strong> ${s.benefits}</p>
+                                    <p class="text-red-600 text-xs mt-2"><strong>Risk:</strong> ${s.risk}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('strategies').classList.remove('hidden');
+
+            } catch (err) {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('error').classList.remove('hidden');
+                document.getElementById('errorMsg').innerText = err.message;
+            } finally {
+                document.getElementById('analyzeBtn').disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
